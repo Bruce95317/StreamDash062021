@@ -18,7 +18,8 @@ connection = psycopg2.connect(host=config.DB_HOST, database=config.DB_NAME,
 cursor = connection.cursor(cursor_factory=psycopg2.extras.DictCursor)
 
 option = st.sidebar.selectbox("Which Dashbboard", ('twitter',
-                                                   'stocktwits'))
+                                                   'wallstreetbets',
+                                                   'stocktwits', 'chart', 'pattern'), 4)
 
 st.header(option)
 
@@ -40,6 +41,21 @@ if option == 'twitter':
                         st.write(tweet.text)
                         st.image(
                             f"https://charts2.finviz.com/chart.ashx?t={symbol}")
+
+if option == 'stocktwits':
+    symbol = st.sidebar.text_input("Symbol", value='AAPL', max_chars=5,
+                                   key=None, type='default', help=None)
+    # st.subheader('stocktwits')
+    r = requests.get(
+        f"https://api.stocktwits.com/api/2/streams/symbol/{symbol}.json")
+
+    data = r.json()
+
+    for message in data['messages']:
+        st.image(message['user']['avatar_url'])
+        st.write(message['user']['username'])
+        st.write(message['created_at'])
+        st.write(message['body'])
 
 
 # This is conenect to the docker server (WSB tracker)
@@ -79,21 +95,6 @@ if option == 'wallstreetbets':
     rows = cursor.fetchall()
 
     st.write(rows)
-
-if option == 'stocktwits':
-    symbol = st.sidebar.text_input("Symbol", value='AAPL', max_chars=5,
-                                   key=None, type='default', help=None)
-    # st.subheader('stocktwits')
-    r = requests.get(
-        f"https://api.stocktwits.com/api/2/streams/symbol/{symbol}.json")
-
-    data = r.json()
-
-    for message in data['messages']:
-        st.image(message['user']['avatar_url'])
-        st.write(message['user']['username'])
-        st.write(message['created_at'])
-        st.write(message['body'])
 
 
 # The following two parts require paid version of alpaca trading account.
